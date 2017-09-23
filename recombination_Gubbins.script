@@ -1,0 +1,51 @@
+######################################################################
+## Bacterial recombination analysis and visualization using Gubbins ##
+######################################################################
+
+# Example with 39 Leptospira borgpetersenii genomes (2 chromosomes)
+
+# Requirements:
+#	-> Genome assemblies in fasta format
+#	-> progressiveMauve
+#	-> stripSubsetLCBs
+#	-> xmfa2fasta.pl
+#	-> correct_names.Rscript
+#	-> trimAl
+#	-> Gubbins (run_gubbins.py, gubbins_drawer.py)
+
+# Step 1: Generate core genome alignment using progressiveMauve
+
+	# Run progressiveMauve
+	progressiveMauve --output=chr1_alignment ../*.fna
+	progressiveMauve --output=chr2_alignment ../*.fna
+
+	# Extract LCBs shared by all genomes 
+	# Keep LCBs with minimum size of 500 bp.
+	# Keep LCBs conserved in all genomes (n = 39).
+	stripSubsetLCBs chr1_alignment chr1_alignment.bbcols chr1_core_alignment.xmfa 500 39
+	stripSubsetLCBs chr2_alignment chr2_alignment.bbcols chr2_core_alignment.xmfa 500 39
+
+	# Concatenate all LCBs
+	perl xmfa2fasta.pl --file chr1_core_alignment.xmfa > chr1_core_alignment.fasta
+	perl xmfa2fasta.pl --file chr2_core_alignment.xmfa > chr2_core_alignment.fasta
+
+	# Correct fasta headers
+	R CMD BATCH '--args chr1_core_alignment.xmfa chr1_core.alignment.fasta' correct_names.Rscript
+	R CMD BATCH '--args chr2_core_alignment.xmfa chr2_core.alignment.fasta' correct_names.Rscript
+
+# Step 2: Trim inconsitent algiment columns with trimAl
+
+	trimal -in chr1_core_alignment.names.fasta -out chr1_core_alignment.trim.fasta -strict
+	trimal -in chr2_core_alignment.names.fasta -out chr2_core_alignment.trim.fasta -strict
+
+	cat chr1_core_alignment.trim.fasta | awk -F ' ' '{print $1}' > chr1_core_alignment.final.fasta
+	cat chr2_core_alignment.trim.fasta | awk -F ' ' '{print $1}' > chr2_core_alignment.final.fasta
+
+# Step 3: Run Gubbins over core genome alignments
+
+	run_gubbins.py chr1_core_alignment.final.fasta
+	run_gubbins.py chr2_core_alignment.final.fasta
+	
+	# Standard visualization
+	python gubbins_drawer.py -o chr1_gubbins_recombinations.pdf chr1_core_alignment.final.final_tree.tre chr1_core_alignment.final.recombination_predictions.embl
+	python gubbins_drawer.py -o chr2_gubbins_recombinations.pdf chr2_core_alignment.final.final_tree.tre chr2_core_alignment.final.recombination_predictions.embl
