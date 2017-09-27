@@ -1,0 +1,49 @@
+makeCircosGenomes <- function(cga,out,grp=NULL,col=NULL) {
+
+	if (!is.null(grp)) {
+
+		if (!is.list(grp)) {
+
+			stop('Parameter "grp" must be of type list')
+		}
+	}
+
+	if (!is.null(col)) {
+
+		if (is.null(grp)) {
+
+			stop('If you set "col" you also must set "grp".')
+		
+		} else if (length(col)!=length(grp)) {
+			
+			stop('Parameters "col" and "grp" must be of same length.')
+		}
+	}
+
+	library(seqinr)
+
+	fas <- read.fasta(cga)
+	len <- lapply(fas,length)[[1]]
+	nam <- getName(fas)
+
+	system(paste('touch',out))
+
+	for (n in 1:length(nam)) {
+
+		gi <- paste('genome',n,sep='')
+
+		if (!is.null(col) & !is.null(grp)) {
+		
+			gr <- grep(nam[n],grp)
+			co  <- col[gr]
+
+			p1 <- paste('chr -',gi,nam[n],0,len,co)
+
+		} else {
+
+			p1 <- paste('chr -',gi,nam[n],0,len)
+		}
+
+		cat(p1,file=out,sep='\n',append=T)
+	}
+}

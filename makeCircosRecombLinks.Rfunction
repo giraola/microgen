@@ -1,0 +1,52 @@
+makeCircosRecombLinks <- function(gff,out,cgf,msnps=100) {
+
+	system(paste('touch',out))
+
+	t1 <- read.table(gff,sep='\t',header=F,colClass='character')
+	t2 <- read.table(cgf,sep=' ',header=F,colClass='character')
+
+	d1 <- dim(t1)[1]
+
+	for (x in 1:d1) {
+
+		v1 <- as.vector(t1[x,9])
+		sp <- strsplit(v1,';')
+
+		s1 <- sp[[1]][3]
+		s2 <- unlist(strsplit(s1,' '))[-1]
+		s3 <- unlist(lapply(s2,nchar))
+		s4 <- s2[which(s3>0)]
+
+		snps <- gsub('snp_count=','',sp[[1]][4])
+	
+		st <- as.vector(t1[x,4])
+		en <- as.vector(t1[x,5])
+
+		if (length(s4)>1 & snps>=msnps) {
+
+			cm <- combn(s4,2)
+			dm <- dim(cm)[2]
+
+			for (m in 1:dm) {
+	
+				g1 <- cm[1,m]
+				g2 <- cm[2,m]
+
+				gg <- as.vector(t2[,4])
+				gi <- as.vector(t2[,3])
+
+				i1 <- gi[which(gg==g1)]
+				i2 <- gi[which(gg==g2)]
+
+				if (length(i1)==0 | length(i2)==0) {
+
+					stop('Empty genome identifiers.')
+				}
+
+				pp <- paste(i1,st,en,i2,st,en,'color=grey_a5,stroke_color=white')
+
+				cat(pp,sep='\n',file=out,append=T)
+			}
+		}
+	}
+}
