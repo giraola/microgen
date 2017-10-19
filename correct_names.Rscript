@@ -1,0 +1,32 @@
+library(seqinr)
+
+args <- commandArgs(trailingOnly = TRUE)
+
+ff <- paste('grep "File"',args[1],'> auxfile')
+system(ff)
+
+tab   <- read.table('auxfile',sep = '\t',comment.char='@')
+num   <- as.vector(tab[,1])
+fnum  <- gsub('File','',gsub('#Sequence','',num))
+nam1  <- gsub('../','',gsub('.fasta','',gsub('.fna','',as.vector(tab[,2]))),fixed=T)
+
+system('rm -rf auxfile')
+
+fas  <- read.fasta(args[2])
+seq  <- lapply(getSequence(fas),toupper)
+nam2 <- getName(fas)
+
+nam3 <- c()
+
+for (i in fnum) {
+
+	nam3 <- c(nam3,nam1[which(nam2==i)])
+}
+
+nn <- gsub('.fasta','.names.fasta',args[2])
+
+write.fasta(seq,names=nam3,file=nn)
+
+
+
+
