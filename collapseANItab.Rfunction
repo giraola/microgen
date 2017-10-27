@@ -1,0 +1,44 @@
+collapseANItab <- function(
+			
+			metani, # The filename of metaANI output
+			species # The filename of makeSpeciesList output
+
+			) {
+
+	ani <- readRDS(metani)
+	sps <- readRDS(species)
+
+	sle <- length(sps)
+	nms <- names(sps)
+	cns <- colnames(ani)
+
+	nns <- c()
+	nre <- NULL	
+
+	for (x in 1:sle) {
+
+		s <- as.vector(sps[[x]])
+		w <- which(cns%in%s)
+
+		if (length(w)>1) {
+
+			m   <- apply(ani[,w],1,mean)
+			nns <- c(nns,nms[x])
+			nre <- cbind(nre,m)
+
+		} else if (length(w)==1) {
+
+			nns <- c(nns,nms[x])
+			nre <- cbind(nre,ani[,w])
+
+		} else {
+
+			stop(paste0('Genomes of species ',nms[x],' were not found!'))
+		}
+	}
+
+	rownames(nre) <- rownames(ani)
+	colnames(nre) <- nns
+
+	saveRDS(nre,file='collapsed_ani_table.rds')
+}
