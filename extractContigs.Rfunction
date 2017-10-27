@@ -1,0 +1,143 @@
+
+extractContigs <- function(
+
+			contigs,  # The assembly file 'new_contigs.fasta' produced by metaANI
+			anitab,   # The filename of collapseANItab output
+			thres=95, # ANI threshold for considering species membership (default=95%)
+			outdir    # A name for the output directory
+
+			) {
+
+			library(seqinr,quietly=T)
+
+			system(paste('mkdir',outdir))
+			
+			anitab <- readRDS(anitab)
+
+			cns <- colnames(anitab)
+			rns <- rownames(anitab)
+			dis <- dim(anitab)
+
+			multiple <- c()
+			novel    <- c()
+			result   <- list()
+
+			for (o in 1:dis[2]) {
+
+				goods <- c()
+
+				for (l in 1:dis[1]) {
+
+					this <- anitab[l,o]
+					rest <- as.vector(anitab[l,-o])
+
+					wl <- length(which(rest>=thres))
+
+					if (this > thres & wl==0) {
+
+						goods <- c(goods,rns[l])
+				
+					} else if (this > thres & wl>0) {
+
+						mr <- max(rest)
+						df <- this-mr
+
+						if (df>=2) {
+
+							goods <- c(goods,rns[l])
+
+						} else if (df<2 & df>0) {
+
+							multiple <- c(multiple,rns[l])
+						}
+
+					} else if (this < thres & wl==0) {
+
+						novel <- c(novel,rns[l])
+					}
+				}
+
+				result[[o]] <- goods
+			}
+			
+			lns <- length(cns)
+			
+			result[[lns+1]] <- unique(multiple)
+			result[[lns+2]] <- unique(novel)
+
+			names(result) <- c(cns,c('unresolved','unasigned'))
+
+			# Save list
+
+			setwd(outdir)
+			saveRDS(result,file='assignment_list.rds')
+			setwd('../')
+
+			# Write contigs and log file
+
+			fasta <- read.fasta(contigs)
+			sequs <- lapply(getSequence(fasta),toupper)
+			namos <- getName(fasta)
+
+			setwd(outdir)
+
+			log <- NULL
+
+			for (x in 1:length(result)) {
+
+				nn <- result[[x]]
+
+				if (length(nn)>0) {
+
+					na <- names(result)[x]
+					ff <- paste0(na,'_contigs.fasta')
+
+					sn <- which(namos%in%nn)
+					wn <- namos[sn]	
+					zn <- paste0(na,'_',wn)
+					ss <- sequs[sn]
+	
+					write.fasta(ss,names=zn,file=ff)
+					
+					nc <- length(ss)
+					ll <- unlist(lapply(ss,length))				
+					ma <- max(ll)
+					mi <- min(ll)
+					su <- sum(ll)
+					pc <- round(nc/length(sequs)*100,digits=2)
+					pb <- round(su/sum(unlist(lapply(sequs,length)))*100,digits=2)
+					t1 <- rev(sort(ll))
+					t2 <- cumsum(t1) <= sum(ll)/2
+					nf <- t1[sum(t2)]
+					if (length(nf)==0) {nf <- 0}				
+					gc <- round(mean(unlist(lapply(ss,GC))),digits=2)
+
+					log <- rbind(log,c(nc,ma,mi,su,pc,pb,nf,gc))
+
+				} else {
+
+					log <- rbind(log,rep(0,8))
+				}
+			}
+
+			cols <- c('ContigNum',
+				  'MaxContig',
+                                  'MinContig',
+                                  'TotalLength',
+				  'PercentContig',
+				  'PercentLength',
+				  'N50','%GC')
+
+			colnames(log) <- cols
+			rownames(log) <- names(result)
+
+			dl <- dim(log)[1]
+			log2 <- log[-c(dl-1,dl),]
+					
+			log2 <- log2[order(log2[,1],decreasing=T),]
+			log3 <- rbind(log2,log[c(dl-1,dl),])
+
+			write.table(log3,sep='\t',quote=F,file='species_contigs_statistics.tsv')
+			
+			setwd('../')
+}
