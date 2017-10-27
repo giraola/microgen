@@ -1,0 +1,24 @@
+indexBowtie2Ref <- function(
+			
+			reference, # Reference fasta file to be indexed
+			suffix,    # Suffix to call indexed reference
+			outdir     # Output directory
+		
+			) {
+
+			#####################################
+			# bowtie2-build must be in the path #
+			#####################################
+
+			system(paste('mkdir',outdir))
+			system(paste('cp ',reference,' ./',outdir,sep=''))
+			setwd(outdir)
+			
+			ref <- list.files()
+
+			cmd <- paste('bowtie2-build',ref[1],suffix,'2> log')
+			system(cmd)
+			system('rm',ref[1],'log')
+
+			setwd('../')
+}
