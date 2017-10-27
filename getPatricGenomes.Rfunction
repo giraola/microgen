@@ -1,0 +1,44 @@
+getPatricGenomes <- function(
+
+			tabfile, # Default table downloaded from PATRIC containing genome information
+			outdir,  # Output directory
+			outfile='concat_genomes.fna',
+			patric='ftp://ftp.patricbrc.org/patric2/current_release/fna/'
+
+			) {		
+	
+			tab <- read.table(tabfile,sep=',',header=T,colClasses='character')
+			ids <- as.vector(tab[,1])
+
+			system(paste('mkdir',outdir))			
+			setwd(outdir)
+
+			for (i in ids) {
+
+				cmd <- paste0('wget ',patric,i,'.fna 2> log')
+				system(cmd)
+			}
+	
+			system('rm -rf log')
+		
+			library(seqinr,quietly=T)
+
+			fnas <- list.files(pattern='.fna')
+			
+			conc <- list()
+			nams <- c()
+
+			for (f in 1:length(fnas)) {
+
+				fas <- read.fasta(fnas[f])
+				sqs <- lapply(getSequence(fas),toupper)
+				uqs <- unlist(sqs)
+	
+				conc[[f]] <- uqs
+				nams      <- c(nams,gsub('.fna','',fnas[f]))
+			}
+
+			write.fasta(conc,names=nams,file=outfile)
+
+			system(paste0('mv ../',tabfile,' .'))
+}
