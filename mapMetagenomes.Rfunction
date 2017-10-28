@@ -1,0 +1,115 @@
+mapMetagenomes <- function(
+
+			fqdir,      # Directory with .fastq, .fastq.gz, .fq or .fq.gz files
+			samples,    # Vector containing sample names
+			reference,  # Path to indexed reference
+			threads=10, # Number of threads used during read mapping with bowtie2
+ 			outdir      # Output directory
+
+			) {
+
+			# Reads must be paired in separate files containing the _P1 and _P2 patterns
+			# Sample names shoud be contained in the filename with pattern _SAMPLE_
+			# bowtie2 must be in the path
+
+			files <- list.files(fqdir)
+
+			# Check file extensions
+
+			g1 <- grep('.fq',files)
+			g2 <- grep('.fq.gz',files)
+			g3 <- grep('.fastq',files)
+			g4 <- grep('.fastq.gz',files)
+
+			lg <- list(g1,g2,g3,g4)
+			gg <- unlist(lapply(lg,length))
+
+			wl <- which(gg>0)
+
+			if (length(wl)==0) {
+
+				stop('No fastq files found in directory, recoginzed file extensions\
+				      are .fastq, .fastq.gz, .fq and .fq.gz.')
+			
+			} else if (length(wl)==1) {
+
+				reads <- files[lg[[wl]]]
+
+			} else if (length(wl)>1) {
+
+
+				if ('1_2'==paste(wl,collapse='_')) {
+
+					reads <- files[lg[[wl[2]]]]
+				
+				} else if ('3_4'==paste(wl,collapse='_')) {
+
+					reads <- files[lg[[wl[2]]]]
+				
+				} else {
+
+					stop('All read files must have the same extension!')
+				}
+			}
+
+			# Check paired reads
+
+			l1 <- length(grep('_P1',reads))			
+			l2 <- length(grep('_P2',reads))
+
+			if (l1!=l2) {
+
+				stop('Forward and reverse read files were not found for all samples!')
+			}
+
+			# Check samples
+
+			'%notin%' <- Negate('%in%')
+
+			for (s in samples) {
+
+				le <- length(grep(paste0('_',s,'_'),reads))
+			
+				if (le%notin%c(2,4)) {
+
+					stop(paste('Some read files for sample',s,'were not found!'))
+				}
+			}
+
+			# Map with bowtie2
+
+			for (s in samples) {
+
+				rs <- reads[grep(paste0('_',s,'_'),reads)]
+				p1 <- rs[grep('_P1',rs)]
+				p2 <- rs[grep('_P2',rs)]
+
+				f1 <- gsub('//','/',paste(fqdir,p1,sep='/'))
+				f2 <- gsub('//','/',paste(fqdir,p2,sep='/'))
+
+				ur <- unlist(strsplit(reference,'/'))
+				lr <- length(ur)
+				re <- ur[lr]
+
+				mf <- paste0(s,'_vs_',re,'.log')
+				al <- paste0(s,'_vs_',re,'_unpaired')
+				ac <- paste0(s,'_vs_',re,'_paired')
+				sf <- paste0(s,'_vs_',re,'.sam')
+		
+				bwt <- paste(
+
+						'bowtie2 -x ',reference,
+						' -1 ',f1,' -2 ',f2,
+						' -p ',threads,
+						' --met-file ',mf,
+						' --al ',al,
+						' --al-conc ',ac,
+						' -S ',sf,' 2> bwt.log',sep='')
+
+				print(paste('Mapping sample',s))
+
+				system(bwt)
+				system('rm -rf bwt.log')
+				system(paste('mv ',mf,' ',al,' ',ac,'.* ',sf,' ',outdir,sep=''))
+			}
+}
