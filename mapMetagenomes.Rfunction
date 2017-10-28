@@ -75,6 +75,8 @@ mapMetagenomes <- function(
 					stop(paste('Some read files for sample',s,'were not found!'))
 				}
 			}
+			
+			system(paste('mkdir',outdir))
 
 			# Map with bowtie2
 
@@ -110,6 +112,6 @@ mapMetagenomes <- function(
 
 				system(bwt)
 				system('rm -rf bwt.log')
-				system(paste('mv ',mf,' ',al,' ',ac,'.* ',sf,' ',outdir,sep=''))
+				system(paste('mv ',mf,' ',al,' ',ac,'.* ',sf,' ./',outdir,sep=''))
 			}
 }
