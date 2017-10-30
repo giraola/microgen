@@ -1,0 +1,60 @@
+
+genomeAssembly <- function(
+
+			spades,              # Path to spades.py
+			reads,               # Path to mergeReads output directory
+			threads,             # Number of threads
+			outdir,		     # Name for output directory
+			outpref,             # Prefix for output files
+			maxm=100,	     # RAM limit in Gb
+			kmers=c(33,53,73,93) # Vector containing k-mers to try during assembly
+		
+			) {
+
+			library(random,quietly=T)
+			library(seqinr,quietly=T)
+
+			rnd <- randomStrings(n=1,len=5)
+			out <- paste0('spades',rnd)
+
+			rds <- gsub('//','/',list.files(reads,full.names=T))
+			r1  <- rds[grep('_P1.fastq',rds)]
+			r2  <- rds[grep('_P2.fastq',rds)]
+
+			kms <- paste(kmers,collapse=',')
+
+			cmd <- paste0('python ',spades,
+				      ' -1 ',r1,' -2 ',r2,
+				      ' --careful -m ',maxm,
+				      ' -t ',threads,' -k ',
+				      kms,' -o ',out)
+
+			system(cmd)
+
+			setwd(out)
+
+			outname <- paste0(outpref,'.fasta')
+			system(paste('mv scaffolds.fasta',outname))
+			system(paste('mv',outname,'../'))
+			setwd('../')
+			system(paste0('rm -rf ',out))
+
+			# Make output directory
+
+			system(paste0('mkdir ',outdir))
+			setwd(outdir)
+			system(paste0('mv ../',outname,' .'))
+
+			fasta <- read.fasta(outname)
+			nams  <- getName(fasta)
+
+			sequs <- lapply(getSequence(fasta),toupper)
+			lens  <- unlist(lapply(sequs,length))
+			pass  <- which(lens>=1000)
+
+			write.fasta(
+
+			
+			
+			
+}
