@@ -96,14 +96,18 @@ mappingStatistics <- function(
 				o1     <- opairs[grep(paste0('_',s,'_'),opairs)]
 
 				if (ul=='gz') {
-
-					r1   <- system(paste('zcat',o1,'| head -n1'),intern=T)
+					
+					suppressMessages(
+						r1   <- system(paste('zcat',o1,'| head -n1'),intern=T))
+						
 					r2   <- c2s(s2c(r1)[1:6])
 					ocnt <- system(paste('zgrep -c',r2,o1),intern=T)
 
 				} else {
-
-					r1   <- system(paste('head -n 1',o1),intern=T)
+						
+					suppressMessages(
+						r1   <- system(paste('head -n 1',o1),intern=T))
+					
 					r2   <- c2s(s2c(r1)[1:6])
 					ocnt <- system(paste('grep -c',r2,o1),intern=T)
 				}
