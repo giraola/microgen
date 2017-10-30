@@ -1,0 +1,30 @@
+mergeReads <- function(
+
+			samples, # Vector containing samples to be merged
+			outpref, # Prefix for output file names
+			mapped   # Directory with results of mapMetagenomes
+
+			) {
+
+			p  <- list.files(mapped,pattern='_paired.1')
+			p1 <- gsub('//','/',list.files(mapped,pattern='_paired.1',full.names=T))
+			p2 <- gsub('//','/',list.files(mapped,pattern='_paired.2',full.names=T))
+
+			sp1 <- do.call(rbind,(strsplit(p,'_')))[,1]
+			w   <- which(sp1%in%samples)
+
+			c1  <- p1[w]
+			c2  <- p2[w]
+
+			f1  <- paste0(outpref,'_P1.fastq')
+			f2  <- paste0(outpref,'_P2.fastq')
+
+			cm1 <- paste0('cat ',c1,' > ',f1)
+			cm2 <- paste0('cat ',c2,' > ',f2)
+
+			system(cm1)
+			system(cm2) 
+
+			system(paste('mkdir',outpref))
+			system(paste('mv',f1,f2,outpref))
+}
