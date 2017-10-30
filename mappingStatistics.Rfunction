@@ -1,0 +1,166 @@
+mappingStatistics <- function(
+
+			groups,   # List of vectors containing grouped sample names by any condition
+			mapped,   # Directory with results of mapMetagenomes
+			original, # Directory containing original read files (input to mapMetagenomes)
+			outtab,   # Suffix filename for tabular output (saved in RDS format).
+			outpdf    # Suffix filename for graphical barplot (saved in pdf format).
+
+			) {
+
+			library(seqinr,quietly=T)
+			library(RColorBrewer,quietly=T)
+
+			options(warn=-1,err=-1)
+
+			oreads <- gsub('//','/',list.files(original,full.names=T))
+			mreads <- gsub('//','/',list.files(mapped,full.names=T))
+
+			# Check file extensions
+
+			g1 <- grep('.fq',oreads)
+			g2 <- grep('.fq.gz',oreads)
+			g3 <- grep('.fastq',oreads)
+			g4 <- grep('.fastq.gz',oreads)
+
+			lg <- list(g1,g2,g3,g4)
+			gg <- unlist(lapply(lg,length))
+
+			wl <- which(gg>0)
+
+			if (length(wl)==0) {
+
+				stop('No fastq files found in directory, recoginzed file extensions\
+				      are .fastq, .fastq.gz, .fq and .fq.gz.')
+			
+			} else if (length(wl)==1) {
+
+				reads <- oreads[lg[[wl]]]
+
+			} else if (length(wl)>1) {
+
+
+				if ('1_2'==paste(wl,collapse='_')) {
+
+					reads <- oreads[lg[[wl[2]]]]
+				
+				} else if ('3_4'==paste(wl,collapse='_')) {
+
+					reads <- oreads[lg[[wl[2]]]]
+				
+				} else {
+
+					stop('All read files must have the same extension!')
+				}
+			}
+
+			# Check paired reads
+
+			l1 <- length(grep('_P1',reads))			
+			l2 <- length(grep('_P2',reads))
+
+			if (l1!=l2) {
+
+				stop('Forward and reverse read files were not found for all samples!')
+			}
+
+			# Check samples
+
+			'%notin%' <- Negate('%in%')
+
+			samples <- as.vector(unlist(groups))
+
+			for (s in samples) {
+
+				le <- length(grep(paste0('_',s,'_'),reads))
+			
+				if (le%notin%c(2,4)) {
+
+					stop(paste('Some read files for sample',s,'were not found!'))
+				}
+			}
+			
+			# Count reads
+
+			opairs <- reads[grep('_P1',reads)]
+			mpairs <- mreads[grep('_paired.1',mreads)]
+
+			op <- unlist(strsplit(opairs[1],'.',fixed=T))
+			ol <- length(op)
+			ul <- op[ol]
+
+			result <- NULL
+
+			for (s in samples) {
+
+				o1     <- opairs[grep(paste0('_',s,'_'),opairs)]
+
+				if (ul=='gz') {
+
+					r1   <- system(paste('zcat',o1,'| head -n1'),intern=T)
+					r2   <- c2s(s2c(r1)[1:6])
+					ocnt <- system(paste('zgrep -c',r2,o1),intern=T)
+
+				} else {
+
+					r1   <- system(paste('head -n 1',o1),intern=T)
+					r2   <- c2s(s2c(r1)[1:6])
+					ocnt <- system(paste('grep -c',r2,o1),intern=T)
+				}
+				
+				m1     <- mpairs[grep(paste0('/',s,'_'),mpairs)]
+				mcount <- system(paste('grep -c',r2,m1),intern=T)
+
+				percen <- round(as.numeric(mcount)/as.numeric(ocnt)*100,digits=2)
+				
+				result <- rbind(result,c(ocnt,mcount,percen))
+			}
+
+			rownames(result) <- samples
+			colnames(result) <- c('OriginalPairs','MappedPairs','Percentage')
+
+			result <- as.data.frame(result)
+
+			saveRDS(result,file=paste0(outtab,'.rds'))
+
+			# Generate barplot
+
+			bpl        <- as.numeric(as.vector(result[,3]))
+			names(bpl) <- samples
+
+			ymx <- max(bpl)
+			nmx <- ymx%%10
+			dmx <- 10-nmx
+			fmx <- ymx+dmx
+
+			lengrp  <- length(groups)
+			palette <- brewer.pal.info[brewer.pal.info$category=='qual',]
+			colvect <- unlist(mapply(brewer.pal,palette$maxcolors,rownames(palette)))
+
+			colors  <- c()
+			ucols   <- c()
+			bpl2    <- c()
+
+			for (x in 1:lengrp) {
+
+				g <- groups[[x]]
+				b <- bpl[which(samples%in%g)]
+				b <- b[order(b)]
+	
+				bpl2 <- c(bpl2,b)
+
+				colors <- c(colors,rep(colvect[x],length(b)))
+				ucols <- c(ucols,colvect[x])
+			}
+
+							
+			pdf(paste0(outpdf,'.pdf'))
+
+			barplot(bpl2,border=F,col=colors,
+				ylab='Percentage of paired reads mapped against reference',
+				las=2,ylim=c(0,fmx),cex.names=.8)
+
+			legend(legend=names(groups),'topright',fill=ucols,border=F)
+			
+			dev.off()
+}
