@@ -1,7 +1,7 @@
 indexBowtie2Ref <- function(
 			
 			reference, # Reference fasta file to be indexed
-			suffix,    # Suffix to call indexed reference
+			outpref,    # Suffix to call indexed reference
 			outdir     # Output directory
 		
 			) {
@@ -16,7 +16,7 @@ indexBowtie2Ref <- function(
 			
 			ref <- list.files()
 
-			cmd <- paste('bowtie2-build',ref[1],suffix,'2> log')
+			cmd <- paste('bowtie2-build',ref[1],outpref,'2> log')
 			system(cmd)
 			system('rm',ref[1],'log')
 
