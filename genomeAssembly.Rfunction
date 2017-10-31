@@ -1,4 +1,3 @@
-
 genomeAssembly <- function(
 
 			spades,              # Path to spades.py
@@ -33,28 +32,39 @@ genomeAssembly <- function(
 
 			setwd(out)
 
-			outname <- paste0(outpref,'.fasta')
-			system(paste('mv scaffolds.fasta',outname))
-			system(paste('mv',outname,'../'))
-			setwd('../')
-			system(paste0('rm -rf ',out))
-
-			# Make output directory
-
-			system(paste0('mkdir ',outdir))
-			setwd(outdir)
-			system(paste0('mv ../',outname,' .'))
-
-			fasta <- read.fasta(outname)
+			fasta <- read.fasta('scaffolds.fasta')
 			nams  <- getName(fasta)
-
 			sequs <- lapply(getSequence(fasta),toupper)
 			lens  <- unlist(lapply(sequs,length))
 			pass  <- which(lens>=1000)
 
-			write.fasta(
+			pseq  <- sequs[pass]
+			nseq  <- nams[pass]
 
+			write.fasta(pseq,names=nseq,file=paste0('../',outname))
 			
-			
-			
+			setwd('../')
+			system(paste0('mkdir ',outdir))
+			system(paste0('mv ',outname,' ',outdir))
+
+			nc <- length(pseq)
+			le <- unlist(lapply(pseq,length))
+			ma <- max(le)
+			mi <- min(le)
+			su <- sum(le)
+			gc <- mean(unlist(lapply(pseq,GC)))*100
+			t1 <- rev(sort(le))
+			t2 <- cumsum(t1) <= sum(le)/2
+			nf <- t1[sum(t2)]
+			if (length(nf)==0) {nf <- 0}
+
+			log        <- c(outpref,nc,ma,mi,su,gc,nf)
+			names(log) <- c('Assembly',
+					'MaxContig',
+					'MinContig',
+					'TotalLength',
+					'N50','%GC')
+
+			saveRDS(log,file=paste0('./',outdir,'/',outpref,'_report.rds'))
 }
+
