@@ -1,84 +1,87 @@
-makeSpeciesList <- function(patric,genus) {
+makeSpeciesList <- function(
 
-	tab <- read.table(patric,sep=',',header=T,colClasses='character')
-	sps <- as.vector(tab$Genome.Name)
-	ips <- unlist(lapply(sps,function(x){strsplit(x,' ')[[1]][2]}))
-	ups <- unique(ips)
-	sss <- which(ups=='sp.')
+			patric,                  # Standard genome information table from PATRIC
+			genus,			 # Genus name
+			outli='species_list.rds' # Filename for output list
+
+			) {
+
+			tab <- read.table(patric,sep=',',header=T,colClasses='character')
+			sps <- as.vector(tab$Genome.Name)
+			ips <- unlist(lapply(sps,function(x){strsplit(x,' ')[[1]][2]}))
+			ups <- unique(ips)
+			sss <- which(ups=='sp.')
 	
-	gen <- unlist(lapply(sps,function(x){strsplit(x,' ')[[1]][1]}))
-	gun <- unique(gen)
+			gen <- unlist(lapply(sps,function(x){strsplit(x,' ')[[1]][1]}))
+			gun <- unique(gen)
 
-	if (length(gun)!=1) {
+			if (length(gun)!=1) {
 
-		stop('Different genus names found!')
+				stop('Different genus names found!')
 	
-	} else {
+			} else {
 
-		if (gun!=genus) {
+				if (gun!=genus) {
 
-			stop(paste('Provided genus name',genus,'do not match with found in data!'))
-		}
-	}
+					err <- paste('Provided genus name',genus,
+						     'do not match with found in data!')
+					stop(err)
+				}
+			}
 
-	if (length(sss)>0) {
+			if (length(sss)>0) {
 
-		ups2 <- ups[-sss]
-	}
+				ups2 <- ups[-sss]
+			}
 	
-	spl <- list()
-	nms <- c()
+			spl <- list()
+			nms <- c()
 
-	for (s in 1:length(ups2)) {
+			for (s in 1:length(ups2)) {
 
-		if (ups2[s]!='sp.') {
+				if (ups2[s]!='sp.') {
 
-			w   <- which(ips==ups2[s])
-			ids <- as.vector(tab[w,1])
+					w   <- which(ips==ups2[s])
+					ids <- as.vector(tab[w,1])
 
-			spl[[s]] <- ids
-			nms[s]   <- paste(genus,ups2[s],sep='_')	
-		}
-	}
+					spl[[s]] <- ids
+					nms[s]   <- paste(genus,ups2[s],sep='_')	
+				}
+			}
 
-	names(spl) <- nms
+			names(spl) <- nms
 
-	if (length(sss)>0) {
+			if (length(sss)>0) {
 
-		spw <- which(ips=='sp.')
+				spw <- which(ips=='sp.')
 
-		if (length(spw)>0) {
+				if (length(spw)>0) {
 
-			spw2 <- tab[spw,1:2]
-			spl2 <- list()
-			nms2 <- c()
-		}
+					spw2 <- tab[spw,1:2]
+					spl2 <- list()
+					nms2 <- c()
+				}
 
-		for (p in 1:dim(spw2)[1]) {
+				for (p in 1:dim(spw2)[1]) {
 
-			spl2[[p]] <- as.vector(spw2[p,1])
-			nnn       <- gsub(' strain','',as.vector(spw2[p,2]))
-			nnnn      <- strsplit(nnn,' ')[[1]][3]
-			nms2[[p]] <- paste(genus,'sp',nnnn,sep='_')
-		}
+					spl2[[p]] <- as.vector(spw2[p,1])
+					nnn       <- gsub(' strain','',as.vector(spw2[p,2]))
+					nnnn      <- strsplit(nnn,' ')[[1]][3]
+					nms2[[p]] <- paste(genus,'sp',nnnn,sep='_')
+				}
 
-		names(spl2) <- nms2
+				names(spl2) <- nms2
 	
-		final <- c(spl,spl2)
+				final <- c(spl,spl2)
 	
-	} else {
+			} else {
 
-		final <- spl
-	}
+				final <- spl
+			}
 
-	saveRDS(final,file='species_list.rds')
+			saveRDS(final,file=outli)
 }
-			
-		
-			
 
-			
-		
 			
 
 	
