@@ -3,8 +3,8 @@ mappingStatistics <- function(
 			groups,   # List of vectors containing grouped sample names by any condition
 			mapped,   # Directory with results of mapMetagenomes
 			original, # Directory containing original read files (input to mapMetagenomes)
-			outtab,   # Suffix filename for tabular output (saved in RDS format).
-			outpdf    # Suffix filename for graphical barplot (saved in pdf format).
+			outtab,   # Prefix filename for tabular output (saved in RDS format).
+			outpdf    # prefix filename for graphical barplot (saved in pdf format).
 
 			) {
 
