@@ -1,12 +1,12 @@
 makeSpeciesList <- function(
 
-			patric,                  # Standard genome information table from PATRIC
+			tabfile,                  # Standard genome information table from PATRIC
 			genus,			 # Genus name
 			outli='species_list.rds' # Filename for output list
 
 			) {
 
-			tab <- read.table(patric,sep=',',header=T,colClasses='character')
+			tab <- read.table(tabfile,sep=',',header=T,colClasses='character')
 			sps <- as.vector(tab$Genome.Name)
 			ips <- unlist(lapply(sps,function(x){strsplit(x,' ')[[1]][2]}))
 			ups <- unique(ips)
