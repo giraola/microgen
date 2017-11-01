@@ -54,7 +54,7 @@ genomeAssembly <- function(
 			ma <- max(le)
 			mi <- min(le)
 			su <- sum(le)
-			gc <- mean(unlist(lapply(pseq,GC)))*100
+			gc <- round(mean(unlist(lapply(pseq,GC)))*100,digits=2)
 			t1 <- rev(sort(le))
 			t2 <- cumsum(t1) <= sum(le)/2
 			nf <- t1[sum(t2)]
