@@ -1,12 +1,13 @@
 collapseANItab <- function(
 			
-			metani, # The filename of metaANI output
-			species # The filename of makeSpeciesList output
+			anitab,  # The filename of assignSpecies output
+			species, # A list object derived from makeSpeciesList
+			outpref  # A prefix for output filename
 
 			) {
 
-	ani <- readRDS(metani)
-	sps <- readRDS(species)
+	ani <- readRDS(anitab)
+	sps <- species
 
 	sle <- length(sps)
 	nms <- names(sps)
@@ -40,5 +41,5 @@ collapseANItab <- function(
 	rownames(nre) <- rownames(ani)
 	colnames(nre) <- nns
 
-	saveRDS(nre,file='collapsed_ani_table.rds')
+	saveRDS(nre,file=paste0(outpref,.rds'))
 }
