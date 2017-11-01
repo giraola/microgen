@@ -41,5 +41,5 @@ collapseANItab <- function(
 	rownames(nre) <- rownames(ani)
 	colnames(nre) <- nns
 
-	saveRDS(nre,file=paste0(outpref,.rds'))
+	saveRDS(nre,file=paste0(outpref,'.rds'))
 }
