@@ -1,7 +1,7 @@
 genomeAssembly <- function(
 
 			spades,              # Path to spades.py
-			reads,               # Path to mergeReads output directory
+			mreads,              # Path to mergeReads output directory
 			threads,             # Number of threads
 			outdir,		     # Name for output directory
 			outpref,             # Prefix for output files
@@ -16,7 +16,7 @@ genomeAssembly <- function(
 			rnd <- randomStrings(n=1,len=5)
 			out <- paste0('spades',rnd)
 
-			rds <- gsub('//','/',list.files(reads,full.names=T))
+			rds <- gsub('//','/',list.files(mreads,full.names=T))
 			r1  <- rds[grep('_P1.fastq',rds)]
 			r2  <- rds[grep('_P2.fastq',rds)]
 
@@ -40,6 +40,8 @@ genomeAssembly <- function(
 
 			pseq  <- sequs[pass]
 			nseq  <- nams[pass]
+			
+			outname <- paste0(outpref,'.fasta')
 
 			write.fasta(pseq,names=nseq,file=paste0('../',outname))
 			
