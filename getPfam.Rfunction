@@ -1,0 +1,26 @@
+getPfam <- function(
+
+		pfam = 'http://pfam.xfam.org/',
+		getcmd = 'wget',
+		families,
+		outdir
+
+		) {
+
+		wd <- getwd()
+		system(paste0('mkdir ',outdir))
+		setwd(outdir)
+
+		for (f in families) {
+
+			cmd <- paste0(getcmd,' ',pfam,'family/',f,'/hmm')
+			system(cmd,ignore.stdout=T)
+
+			nam <- paste0(f,'.hmm')
+			system(paste0('mv hmm ',nam))
+		}
+
+		setwd(wd)
+}
+
+
