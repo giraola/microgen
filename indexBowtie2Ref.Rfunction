@@ -18,7 +18,7 @@ indexBowtie2Ref <- function(
 
 			cmd <- paste('bowtie2-build',ref[1],outpref,'2> log')
 			system(cmd)
-			system('rm',ref[1],'log')
+			system(paste('rm',ref[1],'log'))
 
 			setwd('../')
 }
