@@ -16,12 +16,10 @@ indexBowtie2Ref <- function(
 			
 			ref <- list.files()
 
-			cmd <- paste('bowtie2-build',ref[1],outpref,'2> log')
-			aux <- capture.output(system(cmd))
+			cmd <- paste('bowtie2-build',ref[1],outpref,'> log 2> log2')
+			system(cmd)
 			
-			system(paste('rm',ref[1],'log'))
-
-			rm(aux)
+			system(paste('rm',ref[1],'log log2'))
 		
 			setwd('../')
 }
