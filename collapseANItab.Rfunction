@@ -26,7 +26,7 @@ collapseANItab <- function(
 
 		if (length(w)>1) {
 
-			m   <- apply(ani[,w],1,mean)
+			m   <- apply(ani[,w],1,max)
 			nns <- c(nns,nms[x])
 			nre <- cbind(nre,m)
 
