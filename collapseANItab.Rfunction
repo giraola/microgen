@@ -1,12 +1,14 @@
 collapseANItab <- function(
 			
-			anitab,  # The filename of assignSpecies output
+			anitab,  # The filename of assignSpecies ANI table output
 			species, # A list object derived from makeSpeciesList
+			genomes, # The assignSpecies "genome_names.rds" output file
 			outpref  # A prefix for output filename
 
 			) {
 
 	ani <- readRDS(anitab)
+	gns <- readRDS(genomes)
 	sps <- species
 
 	sle <- length(sps)
@@ -19,7 +21,8 @@ collapseANItab <- function(
 	for (x in 1:sle) {
 
 		s <- as.vector(sps[[x]])
-		w <- which(cns%in%s)
+		v <- gns[which(gns[,2]%in%s),1]
+		w <- which(cns%in%v)
 
 		if (length(w)>1) {
 
