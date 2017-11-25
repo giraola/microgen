@@ -273,13 +273,15 @@ assignSpecies <- function(
 	gndf           <- as.data.frame(cbind(nw,nm))
 	colnames(gndf) <- c('Identifier','Original')
 
-	write.table(gndf,
-				sep='\t',
-				quote=F,
-				row.names=F,
-				file='../genomes_names.csv'
-				
-				)
+	saveRDS(gndf,file='../genomes_names.rds')
+
+	#write.table(gndf,
+	#			sep='\t',
+	#			quote=F,
+	#			row.names=F,
+	#			file='../genomes_names.csv'
+	#			
+	#			)
 	
 	setwd('../../')
 	
@@ -331,13 +333,15 @@ assignSpecies <- function(
 	ctdf           <- as.data.frame(cbind(wc,nc))
 	colnames(ctdf) <- c('Identifier','Original')
 
-	write.table(ctdf,
-				sep='\t',
-				quote=F,
-				row.names=F,
-				file='../contig_names.csv'
-				
-				)
+	saveRDS(ctdf,file='../contig_names.rds')
+
+	#write.table(ctdf,
+	#			sep='\t',
+	#			quote=F,
+	#			row.names=F,
+	#			file='../contig_names.csv'
+	#			
+	#			)
 
 	setwd('../../')
 
