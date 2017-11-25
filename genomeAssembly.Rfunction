@@ -62,10 +62,11 @@ genomeAssembly <- function(
 
 			log        <- c(outpref,nc,ma,mi,su,gc,nf)
 			names(log) <- c('Assembly',
+					'ContigNum',
 					'MaxContig',
 					'MinContig',
 					'TotalLength',
-					'N50','%GC')
+					'%GC','N50')
 
 			saveRDS(log,file=paste0('./',outdir,'/',outpref,'_report.rds'))
 }
