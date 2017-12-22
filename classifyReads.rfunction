@@ -1,0 +1,58 @@
+classifyReads <- function(
+
+			r1,       # Fastq read 1
+			r2,       # Fastq read 2
+
+			cov=1,	  # Coverage cut-off
+			rlen=150, # Read length
+			db,       # Centrifuge database
+			nthreads, # Number of threads			
+
+			outdir,   # Output directory
+			outpref   # Output prefix
+
+			) {
+
+		#########################################
+		# TODO: detection and download database #
+		#########################################
+
+		# Create output directories
+
+		tdir <- tempdir()
+		system(paste0('mkdir ',tdir))
+
+		if (dir.exists(outdir)==FALSE) {
+
+			system(paste0('mkdir ',outdir))
+		}
+
+		# Run Centrifuge
+
+		o1   <- paste0(outpref,'_report.csv')
+		o2   <- paste0(outpref,'_classification.csv') 
+
+		cmd  <- paste0('centrifuge --threads ',nthreads,
+			       '-q --phred33 --reorder -x ',db,
+			       ' -1 ',r1,' -2 ',r2,' --report-file ',tdir,'/',o1,
+			       ' -S ',tdir,'/',o2)
+		system(cmd)
+
+		# Parse classification
+
+		t1 <- read.csv(paste0(tdir,'/',o1),sep='\t',header=T)
+		t2 <- t1[which(t1$genomeSize>0),]
+
+		c1 <- t2$numReads*rlen/t2$genomeSize
+		t2$coverage <- c1
+
+		t3 <- t2[which(t2$coverage>=cov),]
+		t4 <- t3[order(t3$coverage,decreasing=T),]
+		t5 <- t4[,c(1,2,4,5,8)]
+
+		# Save result
+
+		system(paste0('mkdir ',outdir))
+
+		saveRDS(t5,file=paste0(outdir,'/',outpref,'.rds'))
+}
