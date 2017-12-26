@@ -1,0 +1,90 @@
+calculateCoverage <- function(
+
+			reads,          # Data frame (or vector) containing paths to FastQ files
+			multiple=FALSE, # Logical indicating if merging multiple samples
+
+			cov=1,	  # Coverage cut-off
+			rlen=150, # Read length
+			db,       # Centrifuge database
+			nthreads, # Number of threads			
+
+			outdir,   # Output directory
+			outpref   # Output prefix
+
+			) {
+
+		#########################################
+		# TODO: detection and download database #
+		#########################################
+
+		# Create output directories
+
+		tdir <- tempdir()
+		system(paste0('mkdir ',tdir))
+
+		if (dir.exists(outdir)==FALSE) {
+
+			system(paste0('mkdir ',outdir))
+		}
+
+		# Check input and run Centrifuge
+
+		if (is.vector(reads)==TRUE & multiple==TRUE) {
+
+			unpaired <- paste(reads,collapse=',')
+
+			o1   <- paste0(outpref,'_report.csv')
+			o2   <- paste0(outpref,'_classification.csv') 
+
+			cmd1 <- paste0('centrifuge --threads ',nthreads,
+				       '-q --phred33 --reorder -x ',db,
+				       ' -U ',unpaired,' --report-file ',tdir,'/',o1,
+				       ' -S ',tdir,'/',o2)
+			system(cmd1)
+
+		} else if (is.vector(reads)==TRUE & multiple==FALSE) {
+
+			o1   <- paste0(outpref,'_report.csv')
+			o2   <- paste0(outpref,'_classification.csv') 
+
+			cmd2 <- paste0('centrifuge --threads ',nthreads,'-q --phred33 --reorder -x ',
+				       db,' -1 ',reads[1],' -2 ',reads[2],' --report-file ',tdir,'/',o1,
+				       ' -S ',tdir,'/',o2)
+			system(cmd2)
+		
+		} else if ((is(reads)[1]=='matrix' | is(reads)[1]=='data.frame') & multiple==TRUE) {
+
+			r1   <- as.vector(reads[,1])
+			r2   <- as.vector(reads[,2])
+
+			m1   <- paste(r1,collapse=',')
+			m2   <- paste(r2,collapse=',')
+
+			cmd3 <- paste0('centrifuge --threads ',nthreads,'-q --phred33 --reorder -x ',
+				       db,' -1 ',m1,' -2 ',m2,' --report-file ',tdir,'/',o1,
+				       ' -S ',tdir,'/',o2)
+			system(cmd3)
+		
+		} else {
+
+			stop('Input is incorrect!')
+		}
+
+		# Parse classification
+
+		t1 <- read.csv(paste0(tdir,'/',o1),sep='\t',header=T)
+		t2 <- t1[which(t1$genomeSize>0),]
+
+		c1 <- t2$numReads*rlen/t2$genomeSize
+		t2$coverage <- c1
+
+		t3 <- t2[which(t2$coverage>=cov),]
+		t4 <- t3[order(t3$coverage,decreasing=T),]
+		t5 <- t4[,c(1,2,4,5,8)]
+
+		# Save result
+
+		system(paste0('mkdir ',outdir))
+
+		saveRDS(t5,file=paste0(outdir,'/',outpref,'.rds'))
+}
