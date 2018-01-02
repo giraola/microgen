@@ -53,6 +53,9 @@ calculateCoverage <- function(
 			system(cmd2)
 		
 		} else if ((is(reads)[1]=='matrix' | is(reads)[1]=='data.frame') & multiple==TRUE) {
+		
+			o1   <- paste0(outpref,'_report.csv')
+			o2   <- paste0(outpref,'_classification.csv')
 
 			r1   <- as.vector(reads[,1])
 			r2   <- as.vector(reads[,2])
