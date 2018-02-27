@@ -45,6 +45,10 @@ mapMetagenomes <- function(
 				} else if ('3_4'==paste(wl,collapse='_')) {
 
 					reads <- files[lg[[wl[2]]]]
+					
+				} else if ('1_3'==paste(wl,collapse='_')) {
+					
+					reads <- files[lg[wl[2]]]]
 				
 				} else {
 
